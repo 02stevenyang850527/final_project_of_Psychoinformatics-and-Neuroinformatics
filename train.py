@@ -16,12 +16,12 @@ from keras.callbacks import CSVLogger, EarlyStopping, ModelCheckpoint
 from keras import regularizers
 from keras.constraints import maxnorm
 
-embedding_dim = 200
+embedding_dim = 100
 split_ratio = 0.1 # the ratio of validation data
 batch = 64
 epoch_num = 400
 train_path = 'train.csv'
-#test_path = 'test.csv'
+test_path = 'test.csv'
 
 def get_embedding_dict(path):
     embedding_dict = {}
@@ -45,15 +45,21 @@ def get_embedding_matrix(word_index,embedding_dict,num_words,embedding_dim):
 
 
 def read_data(path,train):
-    data = pd.read_csv(path, header=None)
+    data = open(path,'r').readlines()
     label=[]
+    txt=[]
     if (train):
         print ('Parse the training data')
-        txt = data.iloc[:,1].values
-        label = data.iloc[:,0].values
+        for i in range(len(data)):
+            d = data[i].find(',')
+            temp = data[i][d+1:]
+            label.append(int(data[i][:d]))
+            txt.append(temp)
+        label = np.array(label)
     else:
         print ('Parse the testing data')
-        txt = data.iloc[:,1].values
+        for i in range(len(data)):
+            txt.append(data[i])
 
     return (txt,label) 
 
@@ -78,13 +84,12 @@ def split_data(X,Y,split_ratio):
 
 def main():
     (txt_train,label) = read_data(train_path,train=True)
-    #(txt_test,_) = read_data(test_path,train=False)
+    (txt_test,_) = read_data(test_path,train=False)
     label = label.reshape(-1,1)
     
     ######### prepocess
     print ('Convert to index sequences.')
-    #corpus = txt_train + txt_test
-    corpus = txt_train
+    corpus = txt_train+txt_test
 
     tokenizer = Tokenizer()
     tokenizer.fit_on_texts(corpus)
@@ -102,7 +107,7 @@ def main():
     #########
     print ('maxlen', max_article_length)
     print ('Get embedding dict from glove.')
-    embedding_dict = get_embedding_dict('../NTUEE/ML2017/hw5/glove.6B/glove.6B.%dd.txt'%embedding_dim)
+    embedding_dict = get_embedding_dict('./glove.twitter.27B.%dd.txt'%embedding_dim)
     print ('Found %s word vectors.' % len(embedding_dict))
     max_features = len(word_index) + 1  # i.e. the number of words
     print ('Create embedding matrix.')
@@ -111,7 +116,7 @@ def main():
     print('Build model...')
 
     csv_logger = CSVLogger('training_report.csv',append=True)
-    earlystopping = EarlyStopping(monitor='val_acc', patience = 7, verbose=1, mode='max')
+    earlystopping = EarlyStopping(monitor='val_acc', patience = 5, verbose=1, mode='max')
     checkpoint = ModelCheckpoint(filepath='best.h5',
                                  verbose=1,
                                  save_best_only=True,
@@ -125,8 +130,9 @@ def main():
                         trainable=False
                        )
             )
-    model.add(GRU(128, dropout=0.2, recurrent_dropout=0.2, activation='tanh'))
-    model.add(Dense(2, activation='sigmoid'))
+    model.add(GRU(128, dropout=0.3, recurrent_dropout=0.3, activation='tanh'))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(2, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
     model.summary()
     
