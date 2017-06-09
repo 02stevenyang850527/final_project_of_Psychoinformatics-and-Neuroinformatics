@@ -112,7 +112,7 @@ def main():
 
     csv_logger = CSVLogger('training_report.csv',append=True)
     earlystopping = EarlyStopping(monitor='val_acc', patience = 7, verbose=1, mode='max')
-    checkpoint = ModelCheckpoint(filepath='best.hdf5',
+    checkpoint = ModelCheckpoint(filepath='best.h5',
                                  verbose=1,
                                  save_best_only=True,
                                  monitor='val_acc',
@@ -131,7 +131,6 @@ def main():
     model.summary()
     
     model.fit(x_train,y_train,epochs=epoch_num, batch_size=batch, validation_data=(x_val,y_val),callbacks=[earlystopping,checkpoint])
-    model.save('mf.h5')
 
 if __name__=='__main__':
     main()
