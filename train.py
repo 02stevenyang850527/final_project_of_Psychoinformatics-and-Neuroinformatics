@@ -99,7 +99,8 @@ def main():
     pickle.dump(tokenizer,open('tokenizer.pkl','wb'))
     print('Pad sequences:')
     X = sequence.pad_sequences(train_sequences)
-    Y = np.concatenate((1-label,label), axis=1)
+    Y = label; output_dim=1
+    #Y = np.concatenate((1-label,label), axis=1); output_dim=2
     print('Split data into training data and validation data')
     (x_train,y_train),(x_val,y_val) = split_data(X,Y,split_ratio)
     max_article_length = x_train.shape[1]
@@ -130,10 +131,17 @@ def main():
                         trainable=False
                        )
             )
-    model.add(GRU(128, dropout=0.3, recurrent_dropout=0.3, activation='tanh'))
+    filters = 16
+    kernel_size= 2
+    model.add(Bidirectional(LSTM(128, dropout=0.4, recurrent_dropout=0.3, activation='tanh')))
     model.add(Dense(64, activation='relu'))
-    model.add(Dense(2, activation='softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['acc'])
+    model.add(Dropout(0.4))
+    model.add(BatchNormalization())
+    model.add(Dense(32, activation='relu'))
+    model.add(Dropout(0.4))
+    model.add(BatchNormalization())
+    model.add(Dense(output_dim, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['acc'])
     model.summary()
     
     model.fit(x_train,y_train,epochs=epoch_num, batch_size=batch, validation_data=(x_val,y_val),callbacks=[earlystopping,checkpoint])
