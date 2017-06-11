@@ -1,3 +1,8 @@
+'''
+Gets to 0.776 validation accuracy after 35 epochs.
+45s/epoch on Intel i5 2Ghz CPU.
+'''
+
 import numpy as np
 import pandas as pd
 import pickle
@@ -131,8 +136,6 @@ def main():
                         trainable=False
                        )
             )
-    filters = 16
-    kernel_size= 2
     model.add(Bidirectional(LSTM(128, dropout=0.4, recurrent_dropout=0.3, activation='tanh')))
     model.add(Dense(64, activation='relu'))
     model.add(Dropout(0.4))
@@ -144,7 +147,7 @@ def main():
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['acc'])
     model.summary()
     
-    model.fit(x_train,y_train,epochs=epoch_num, batch_size=batch, validation_data=(x_val,y_val),callbacks=[earlystopping,checkpoint])
+    model.fit(x_train,y_train,epochs=epoch_num, batch_size=batch, validation_data=(x_val,y_val),callbacks=[earlystopping,checkpoint,csv_logger])
 
 if __name__=='__main__':
     main()
