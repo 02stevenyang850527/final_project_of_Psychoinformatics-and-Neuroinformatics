@@ -34,7 +34,7 @@ word_index = tokenizer.word_index
 test_sequences = tokenizer.texts_to_sequences(txt_test)
 
 print('Pad sequences:')
-x_test = sequence.pad_sequences(test_sequences,maxlen=35) # maxlen being known from train.py
+x_test = sequence.pad_sequences(test_sequences,maxlen=36) # maxlen being known from train.py
 
 print ('x_test shape:',x_test.shape)
 
